@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+      <style>
+      html, body, #cesiumContainer {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>  
+  </head>
+  <body>
+    <div id="cesiumContainer"></div>
+    <script>
+(async () => {
+    const serviceResponse = await fetch("https://api.cesium.com/itwin/token");
+    const { access_token: token } = await serviceResponse.json();
+
+    Cesium.ITwinPlatform.defaultAccessToken = token;
+
+    // Set up viewer
+    const viewer = new Cesium.Viewer("cesiumContainer", {
+    terrain: Cesium.Terrain.fromWorldTerrain(),
+    animation: false,
+    sceneModePicker: false,
+    geocoder: false,
+    homeButton: false,
+    });
+    const scene = viewer.scene;
+    scene.debugShowFramesPerSecond = true;
+
+    // Create tilesets using the iModel ids
+    const surroundingArea = await Cesium.ITwinData.createTilesetFromIModelId(
+    "f856f57d-3d28-4265-9c4f-5e60c0662c15",
+    );
+    const station = await Cesium.ITwinData.createTilesetFromIModelId(
+    "669dde67-eb69-4e0b-bcf2-f722eee94746",
+    );
+    // Add the tilesets to the viewer
+    scene.primitives.add(surroundingArea);
+    scene.primitives.add(station);
+
+    // Create tileset of the reality data mesh
+    const iTwinId = "535a24a3-9b29-4e23-bb5d-9cedb524c743";
+    const realityMeshId = "85897090-3bcc-470b-bec7-20bb639cc1b9";
+    const realityMesh = await Cesium.ITwinData.createTilesetForRealityDataId(
+    iTwinId,
+    realityMeshId,
+    );
+    scene.primitives.add(realityMesh);
+
+    const stationView = {
+    destination: new Cesium.Cartesian3(
+        1255783.605894154,
+        -4732864.394472763,
+        4073433.975291202,
+    ),
+    orientation: new Cesium.HeadingPitchRoll(
+        5.646321670432638,
+        -0.4736439399770642,
+        0.00001691713303575426,
+    ),
+    duration: 0
+    };
+    viewer.scene.camera.flyTo(stationView);
+})();
+    </script>
+  </body>
+</html>
